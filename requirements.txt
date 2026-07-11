@@ -1,6 +1,4 @@
 Flask
 pandas
 numpy
-transformers
-torch
 openpyxl

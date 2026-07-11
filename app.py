@@ -5,13 +5,18 @@ import os
 import numpy as np
 import re
 from pathlib import Path
-from transformers import pipeline
 import logging
 import warnings
 
-# Suppress transformers warnings
+try:
+    from transformers import pipeline
+except Exception:
+    pipeline = None
+
+# Suppress warnings
 warnings.filterwarnings('ignore')
-logging.getLogger('transformers').setLevel(logging.ERROR)
+if pipeline is not None:
+    logging.getLogger('transformers').setLevel(logging.ERROR)
 
 app = Flask(__name__)
 
@@ -26,6 +31,11 @@ def get_pos_tagger():
     """Lazy load POS tagger pipeline (with timeout fallback)"""
     global _pos_tagger
     if _pos_tagger is None:
+        if pipeline is None:
+            print("Transformers not installed; using trigger word-based aspect detection")
+            _pos_tagger = False
+            return None
+
         print("Loading POS tagger model (first time only, may take a moment)...")
         try:
             # Try to load with signal timeout (Windows doesn't support signal, so we use threading approach)
