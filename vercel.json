@@ -9,7 +9,13 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/app.py"
+      "dest": "app.py"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/templates/index"
     }
   ]
 }
