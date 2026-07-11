@@ -1,0 +1,472 @@
+{% extends "base.html" %} {% block content %}
+<div class="dashboard-container">
+  <!-- Statistics Cards -->
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-blue">
+          <i class="fas fa-comments"></i>
+        </div>
+        <div class="stat-content">
+          <h3>Total Komentar</h3>
+          <p class="stat-value" id="totalComments">0</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-green">
+          <i class="fas fa-tag"></i>
+        </div>
+        <div class="stat-content">
+          <h3>Total Aspek</h3>
+          <p class="stat-value" id="totalAspects">0</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-purple">
+          <i class="fas fa-chart-pie"></i>
+        </div>
+        <div class="stat-content">
+          <h3>Total Sentimen</h3>
+          <p class="stat-value" id="totalSentiments">0</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-orange">
+          <i class="fas fa-star"></i>
+        </div>
+        <div class="stat-content">
+          <h3>Sentimen Dominan</h3>
+          <p class="stat-value" id="dominantSentiment">-</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Visualizations Section -->
+  <section class="visualization-section">
+    <div class="visualization-grid">
+      <!-- Visualization 1: Sentiment Distribution Donut Chart -->
+      <div class="viz-card">
+        <div class="viz-header">
+          <h2>Distribusi Sentimen Gabungan</h2>
+        </div>
+        <div class="viz-body">
+          <div class="chart-container">
+            <canvas id="sentimentChart"></canvas>
+          </div>
+          <div class="sentiment-stats" id="sentimentStats">
+            <div class="sentiment-stat">
+              <span class="sentiment-badge positive">Positif</span>
+              <span class="sentiment-count" id="positifCount">0</span>
+              <span class="sentiment-percent" id="positifPercent">0%</span>
+            </div>
+            <div class="sentiment-stat">
+              <span class="sentiment-badge negative">Negatif</span>
+              <span class="sentiment-count" id="negatifCount">0</span>
+              <span class="sentiment-percent" id="negatifPercent">0%</span>
+            </div>
+            <div class="sentiment-stat">
+              <span class="sentiment-badge neutral">Netral</span>
+              <span class="sentiment-count" id="netralCount">0</span>
+              <span class="sentiment-percent" id="netralPercent">0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visualization 2: Top 10 Aspects Bar Chart -->
+      <div class="viz-card">
+        <div class="viz-header">
+          <h2>Top 10 Aspek yang Paling Banyak Dibahas</h2>
+        </div>
+        <div class="viz-body">
+          <div class="chart-container" style="height: 420px">
+            <canvas id="aspectsChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Visualization 3: Stacked Bar Chart Sentiment per Aspect -->
+  <section class="visualization-section">
+    <div class="viz-card full-width">
+      <div class="viz-header">
+        <h2>Sentimen Per Aspek (Top 10)</h2>
+      </div>
+      <div class="viz-body">
+        <div class="chart-container" style="height: 400px">
+          <canvas id="sentimentPerAspectChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- All Aspects Table with Pagination -->
+  <section class="table-section">
+    <div class="table-card">
+      <div class="table-header">
+        <h2>Semua Aspek yang Dibahas</h2>
+        <div class="table-controls">
+          <input
+            type="text"
+            id="searchAspectsInput"
+            class="search-input"
+            placeholder="Cari aspek..."
+          />
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="analysis-table">
+          <thead>
+            <tr>
+              <th>Aspek</th>
+              <th>Positif</th>
+              <th>Negatif</th>
+              <th>Netral</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="allAspectsTableBody">
+            <!-- Populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-footer">
+        <div class="pagination" id="aspectsPagination">
+          <!-- Pagination buttons -->
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Data Storage -->
+<div id="dataStorage" style="display: none">
+  <div id="statsData">{{ stats }}</div>
+  <div id="sentimentDistData">{{ sentiment_distribution }}</div>
+  <div id="topAspectsData">{{ top_aspects }}</div>
+  <div id="sentimentPerAspectData">{{ sentiment_per_aspect }}</div>
+  <div id="skenarioTableData">{{ skenario_table }}</div>
+  <div id="allAspectsData">{{ all_aspects }}</div>
+</div>
+
+{% endblock %} {% block scripts %}
+<script>
+  // Get data from server
+  const statsData = JSON.parse(
+    document.getElementById("statsData").textContent,
+  );
+  const sentimentDistData = JSON.parse(
+    document.getElementById("sentimentDistData").textContent,
+  );
+  const topAspectsData = JSON.parse(
+    document.getElementById("topAspectsData").textContent,
+  );
+  const sentimentPerAspectData = JSON.parse(
+    document.getElementById("sentimentPerAspectData").textContent,
+  );
+  const skenarioTableData = JSON.parse(
+    document.getElementById("skenarioTableData").textContent,
+  );
+  const allAspectsData = JSON.parse(
+    document.getElementById("allAspectsData").textContent,
+  );
+
+  // Update statistics cards
+  document.getElementById("totalComments").textContent =
+    statsData.total_comments.toLocaleString("id-ID");
+  document.getElementById("totalAspects").textContent = statsData.total_aspects;
+  document.getElementById("totalSentiments").textContent =
+    statsData.total_sentiments;
+  document.getElementById("dominantSentiment").textContent =
+    statsData.dominant_sentiment;
+
+  // Initialize charts
+  let sentimentChart, aspectsChart, sentimentPerAspectChart;
+
+  function initCharts() {
+    // Sentiment Distribution Chart
+    initSentimentChart();
+
+    // Top Aspects Chart
+    initAspectsChart();
+
+    // Sentiment Per Aspect Chart
+    initSentimentPerAspectChart();
+  }
+
+  function initSentimentChart() {
+    const ctx = document.getElementById("sentimentChart").getContext("2d");
+    const total =
+      sentimentDistData.Positif +
+      sentimentDistData.Negatif +
+      sentimentDistData.Netral;
+
+    sentimentChart = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: ["Positif", "Negatif", "Netral"],
+        datasets: [
+          {
+            data: [
+              sentimentDistData.Positif,
+              sentimentDistData.Negatif,
+              sentimentDistData.Netral,
+            ],
+            backgroundColor: ["#10b981", "#ef4444", "#9ca3af"],
+            borderColor: ["#fff", "#fff", "#fff"],
+            borderWidth: 3,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: {
+              padding: 15,
+              font: { size: 13, weight: "500" },
+            },
+          },
+        },
+      },
+    });
+
+    // Update sentiment stats
+    document.getElementById("positifCount").textContent =
+      sentimentDistData.Positif;
+    document.getElementById("positifPercent").textContent =
+      ((sentimentDistData.Positif / total) * 100).toFixed(1) + "%";
+    document.getElementById("negatifCount").textContent =
+      sentimentDistData.Negatif;
+    document.getElementById("negatifPercent").textContent =
+      ((sentimentDistData.Negatif / total) * 100).toFixed(1) + "%";
+    document.getElementById("netralCount").textContent =
+      sentimentDistData.Netral;
+    document.getElementById("netralPercent").textContent =
+      ((sentimentDistData.Netral / total) * 100).toFixed(1) + "%";
+  }
+
+  function initAspectsChart() {
+    const aspectNames = Object.keys(topAspectsData);
+    const aspectCounts = Object.values(topAspectsData);
+
+    console.log("Aspect Names:", aspectNames);
+    console.log("Aspect Counts:", aspectCounts);
+
+    const ctx = document.getElementById("aspectsChart").getContext("2d");
+    aspectsChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: aspectNames,
+        datasets: [
+          {
+            label: "Jumlah",
+            data: aspectCounts,
+            backgroundColor: "#0ea5e9",
+            borderColor: "#0284c7",
+            borderWidth: 1,
+            borderRadius: 5,
+          },
+        ],
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+          padding: {
+            left: 80,
+            right: 10,
+            top: 10,
+            bottom: 10,
+          },
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: "top",
+            labels: {
+              padding: 12,
+              font: { size: 11, weight: "500" },
+            },
+          },
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            max: 500,
+            ticks: {
+              stepSize: 100,
+              font: { size: 9 },
+            },
+          },
+          y: {
+            display: true,
+            ticks: {
+              autoSkip: false,
+              maxRotation: 0,
+              minRotation: 0,
+              font: {
+                size: 11,
+              },
+              padding: 15,
+            },
+          },
+        },
+      },
+    });
+  }
+
+  function initSentimentPerAspectChart() {
+    const aspectNames = Object.keys(sentimentPerAspectData);
+    const positifData = aspectNames.map(
+      (asp) => sentimentPerAspectData[asp].Positif,
+    );
+    const negatifData = aspectNames.map(
+      (asp) => sentimentPerAspectData[asp].Negatif,
+    );
+    const netralData = aspectNames.map(
+      (asp) => sentimentPerAspectData[asp].Netral,
+    );
+
+    const ctx = document
+      .getElementById("sentimentPerAspectChart")
+      .getContext("2d");
+    sentimentPerAspectChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: aspectNames,
+        datasets: [
+          {
+            label: "Positif",
+            data: positifData,
+            backgroundColor: "#10b981",
+          },
+          {
+            label: "Negatif",
+            data: negatifData,
+            backgroundColor: "#ef4444",
+          },
+          {
+            label: "Netral",
+            data: netralData,
+            backgroundColor: "#9ca3af",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "top",
+            labels: {
+              padding: 15,
+              font: { size: 12, weight: "500" },
+            },
+          },
+        },
+        scales: {
+          x: {
+            stacked: true,
+          },
+          y: {
+            stacked: true,
+          },
+        },
+      },
+    });
+  }
+
+  // All Aspects Table functionality
+  const ASPECTS_ITEMS_PER_PAGE = 10;
+  let aspectsCurrentPage = 1;
+  let filteredAspectsData = [...allAspectsData];
+
+  function renderAspectsTable() {
+    const start = (aspectsCurrentPage - 1) * ASPECTS_ITEMS_PER_PAGE;
+    const end = start + ASPECTS_ITEMS_PER_PAGE;
+    const pageData = filteredAspectsData.slice(start, end);
+
+    const tbody = document.getElementById("allAspectsTableBody");
+    tbody.innerHTML = "";
+
+    pageData.forEach((row) => {
+      const tr = `
+            <tr class="table-row">
+                <td>${row.Aspek}</td>
+                <td><span class="badge badge-positive">${row.Positif}</span></td>
+                <td><span class="badge badge-negative">${row.Negatif}</span></td>
+                <td><span class="badge badge-neutral">${row.Netral}</span></td>
+                <td><strong>${row.Total}</strong></td>
+            </tr>
+        `;
+      tbody.innerHTML += tr;
+    });
+
+    updateAspectsPagination();
+  }
+
+  function updateAspectsPagination() {
+    const totalPages = Math.ceil(
+      filteredAspectsData.length / ASPECTS_ITEMS_PER_PAGE,
+    );
+    const pagination = document.getElementById("aspectsPagination");
+    pagination.innerHTML = "";
+
+    if (totalPages <= 1) return;
+
+    // Previous button
+    if (aspectsCurrentPage > 1) {
+      pagination.innerHTML += `<button class="pagination-btn" onclick="goToAspectsPage(${aspectsCurrentPage - 1})">← Sebelumnya</button>`;
+    }
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === aspectsCurrentPage) {
+        pagination.innerHTML += `<button class="pagination-btn active">${i}</button>`;
+      } else {
+        pagination.innerHTML += `<button class="pagination-btn" onclick="goToAspectsPage(${i})">${i}</button>`;
+      }
+    }
+
+    // Next button
+    if (aspectsCurrentPage < totalPages) {
+      pagination.innerHTML += `<button class="pagination-btn" onclick="goToAspectsPage(${aspectsCurrentPage + 1})">Selanjutnya →</button>`;
+    }
+  }
+
+  function goToAspectsPage(page) {
+    aspectsCurrentPage = page;
+    renderAspectsTable();
+  }
+
+  // Search functionality for aspects
+  document
+    .getElementById("searchAspectsInput")
+    .addEventListener("keyup", function () {
+      const searchTerm = this.value.toLowerCase();
+      filteredAspectsData = allAspectsData.filter((row) =>
+        row.Aspek.toLowerCase().includes(searchTerm),
+      );
+      aspectsCurrentPage = 1;
+      renderAspectsTable();
+    });
+
+  // Initialize
+  document.addEventListener("DOMContentLoaded", function () {
+    initCharts();
+    renderAspectsTable();
+    renderTable();
+  });
+</script>
+{% endblock %}

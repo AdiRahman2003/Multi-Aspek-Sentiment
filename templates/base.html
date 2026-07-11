@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Dashboard Analisis Sentimen{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 class="sidebar-title">
+          <i class="fas fa-chart-pie"></i> Dashboard
+        </h2>
+        <button class="sidebar-toggle-btn" id="sidebarToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a
+          href="/"
+          class="nav-item {% if request.path == '/' %}active{% endif %}"
+        >
+          <i class="fas fa-home"></i>
+          <span>Dashboard</span>
+        </a>
+        <a
+          href="/analisis"
+          class="nav-item {% if request.path == '/analisis' %}active{% endif %}"
+        >
+          <i class="fas fa-home"></i>
+          <span>Analisis Komentar</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-info">
+          <p><strong>Skripsi</strong></p>
+          <p class="text-muted">Analisis Sentimen RUU Perampasan Aset</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Navbar Header -->
+      <header class="navbar">
+        <div class="navbar-container">
+          <div class="navbar-left">
+            <button class="navbar-toggle" id="navbarToggle">
+              <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="navbar-title">
+              Dashboard Analisis Sentimen RUU Perampasan Aset
+            </h1>
+          </div>
+          <div class="navbar-right">
+            <div class="navbar-info">
+              <span class="navbar-date" id="currentDate"></span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div class="content-area">{% block content %}{% endblock %}</div>
+    </main>
+
+    <!-- Mobile Menu Toggle -->
+    <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+    <script>
+      // Set current date
+      document.getElementById("currentDate").textContent =
+        new Date().toLocaleDateString("id-ID", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+      // Sidebar toggle
+      document
+        .getElementById("sidebarToggle")
+        .addEventListener("click", function () {
+          document.getElementById("sidebar").classList.toggle("active");
+        });
+
+      document
+        .getElementById("navbarToggle")
+        .addEventListener("click", function () {
+          document.getElementById("sidebar").classList.toggle("mobile-open");
+        });
+
+      // Close sidebar when clicking nav items on mobile
+      document.querySelectorAll(".nav-item").forEach((item) => {
+        item.addEventListener("click", function () {
+          if (window.innerWidth < 768) {
+            document.getElementById("sidebar").classList.remove("mobile-open");
+          }
+        });
+      });
+    </script>
+
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
