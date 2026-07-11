@@ -18,11 +18,14 @@ warnings.filterwarnings('ignore')
 if pipeline is not None:
     logging.getLogger('transformers').setLevel(logging.ERROR)
 
-app = Flask(__name__)
-
 # Tentukan path ke folder data
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / 'data'
+app = Flask(
+    __name__,
+    static_folder=str(BASE_DIR / 'static'),
+    template_folder=str(BASE_DIR / 'templates')
+)
 
 # Initialize POS tagging pipeline (lazy loading - akan dimuat saat pertama kali digunakan)
 _pos_tagger = None
